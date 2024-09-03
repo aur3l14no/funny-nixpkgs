@@ -37,16 +37,15 @@
         then throw "optLevel invalid"
         else
           let
-            debugFlag = if genDebug then "-ggdb" else "";
             optFlag = if optLevel == null then "" else "-O${optLevel}";
           in
           pkgs.${pkgName}.overrideAttrs (oldAttrs: {
             doCheck = false;
-            env.NIX_CFLAGS_COMPILE = (oldAttrs.env.NIX_CFLAGS_COMPILE or "") + "${debugFlag} ${optFlag}";
+            env.NIX_CFLAGS_COMPILE = (oldAttrs.env.NIX_CFLAGS_COMPILE or "") + " ${optFlag}";
           } // lib.optionalAttrs genDebug { separateDebugInfo = true; });
 
     in
-    flake-utils.lib.eachDefaultSystem (system: {
+    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ] (system: {
       packages =
         builtins.listToAttrs (builtins.filter (x: x != null) (lib.flatten (map
           (name:
