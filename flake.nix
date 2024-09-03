@@ -61,6 +61,21 @@
             [ packageSourcePair ] ++ packageVariantPairs)
           packageNames
         )));
+      packagesLite =
+        builtins.listToAttrs (builtins.filter (x: x != null) (lib.flatten (map
+          (name:
+            let
+              packageSourcePair = if (builtins.tryEval (toString (pkgs.srcOnly pkgs.${name}))).success then lib.nameValuePair "${name}-src" (pkgs.srcOnly pkgs.${name}) else null;
+              packageVariantPairs = map
+                (optLevel:
+                  if (builtins.tryEval (toString (makePkgWithOptions name { optLevel = optLevel; genDebug = true; }))).success
+                  then lib.nameValuePair (if optLevel != null then "${name}-O${optLevel}" else name) (makePkgWithOptions name { optLevel = optLevel; genDebug = true; })
+                  else null)
+                [ null "0" "1" "2" "3" ];
+            in
+            [ packageSourcePair ] ++ packageVariantPairs)
+          packageNamesLite
+        )));
     })
   ;
 }
